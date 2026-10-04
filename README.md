@@ -13,7 +13,7 @@
 - [7.使用 Cloudflare API 自动创建 Argo](README.md#7使用-cloudflare-api-自动创建-argo)
 - [8.Vmess / Vless 方案设置任意端口回源以使用 CDN](README.md#8vmess--vless-方案设置任意端口回源以使用-cdn)
 - [9.Docker 和 Docker compose 安装](README.md#9docker-和-docker-compose-安装)
-- [10.Nekobox 设置 shadowTLS 方法](README.md#10nekobox-设置-shadowtls-方法)
+- [10.Throne 设置 shadowTLS 方法](README.md#10throne-设置-shadowtls-方法)
 - [11.主体目录文件及说明](README.md#11主体目录文件及说明)
 - [12.自签证书在不同客户端中的处理方式对比](README.md#12自签证书在不同客户端中的处理方式对比)
 - [13.鸣谢下列作者的文章和项目](README.md#13鸣谢下列作者的文章和项目)
@@ -24,16 +24,44 @@
 
 * * *
 ## 1.更新信息
-2026.05.06 v1.3.11 1. Generate v2rayn:// dedicated links for Tuic subscriptions; 2. Generate v2rayn:// dedicated links for AnyTLS subscriptions; 3. Generate v2rayn:// dedicated links for naive http2 and quic modes. Thanks to @DHR60; 1. 为 Tuic 订阅生成 v2rayn:// 专属链接; 2. 为 AnyTLS 订阅生成 v2rayn:// 专属链接; 3. 为 naive http2 和 quic 模式生成 v2rayn:// 专属链接，感谢 @DHR60
+2026.09.16 v1.3.25 Add Hysteria2 ignore_client_bandwidth toggle in [sb -d], default off; [sb -d] 新增 Hysteria2 ignore_client_bandwidth 开关，新安装默认关闭
 
-2026.04.25 v1.3.10 Added native protocol, but client support is extremely limited, with Shadowrocket offering the best compatibility. For the sing-box core, you must use the -glibc or -musl version according to the requirements; refer to the official documentation for details: https://sing-box.sagernet.org/configuration/outbound/naive/; 增加 native 协议，支持该协议的客户端极少，Shadowrocket 支持最好。sing-box 内核需要按说明使用-glibc 或者 -musl 版本，详见官方说明 https://sing-box.sagernet.org/zh/configuration/outbound/naive/
+2026.08.21 v1.3.24 1. Add no-TUN environment support; 2. Fix Alpine OpenRC service stop error; 1. 新增无 TUN 环境支持; 2. 修复 Alpine OpenRC 服务停止误报
 
-2026.04.11 v1.3.9 1. remove pre-install UFW blocking logic, fallback to iptables when inactive; 2. avoid unnecessary sing-box restart for CDN / bandwidth / port hopping changes; 3. reduce redundant single-use functions; 1. 移除安装前 UFW 强制校验，inactive 自动回退 iptables; 2. 优选地址 / 带宽 / 端口跳跃修改不再重启 sing-box; 3. 清理单次调用函数，提升结构可读性
+2026.08.14 v1.3.23 Force HTTP/2 transport for cloudflared tunnels; cloudflared 隧道统一使用 HTTP/2 传输
 
 <details>
     <summary>历史更新 history（点击即可展开或收起）</summary>
 <br>
 
+>2026.08.11 v1.3.22 make Hysteria2 Realm and port hopping mutually exclusive with confirm prompts in install and [sb -d]; 安装与 [sb -d] 修改链路中 Realm 与端口跳跃互斥，切换前均先提示确认
+>
+>2026.08.11 v1.3.21 1. Pre-register a fresh WARP account during install with shared-key fallback; 2. [sb -d] Change WARP account with register / manual input, hot-reload via sing-box check + SIGHUP and exit after success; 1. 安装期后台预注册 WARP 账户，失败回退共享密钥; 2. [sb -d] 菜单新增「更换 WARP 账户」，支持重新注册 / 手动输入，sing-box check + SIGHUP 热更成功后退出
+>
+>2026.08.07 v1.3.20 1. Support independent (non-consecutive) ports per protocol in [sb -d], only available after installation so the install flow stays unchanged; 2. Server address accepts an IP or a domain (use DDNS for NAT VPS whose public IP changes daily); 1. [sb -d] 支持为各协议设置独立（非连续）端口，仅在安装后修改，不影响常规安装流程; 2. 服务器地址支持填写 IP 或域名（NAT VPS 公网 IP 每日变化时可用 DDNS 域名）
+>
+>2026.07.31 v1.3.19 Add real-time traffic stats (-n / main menu); 添加实时流量统计 (-n / 主菜单)
+>
+>2026.07.25 v1.3.18 Add enable/disable subscriptions option in sb -d menu 2. Change v2rayN Hysteria2 Realm config from Finalmask field to ProtoExtraObj; sb -d 菜单新增 「订阅开关」，可随时开启关闭订阅
+>
+>2026.07.20 v1.3.17 1. Add SIGHUP hot-reload support, replace restart sequences with reload; 2. Force base-config regeneration on upgrade to guarantee sing-box check passes;  1. 新增 SIGHUP 热更支持，用 reload 替换重启流程; 2. 升级时强制重置基础配置至新版格式，保证兼容性
+>
+>2026.07.16 v1.3.16 1. Add bind_interface option in sb -d menu to bind outbound traffic to a specific NIC; 2. Change v2rayN Hysteria2 Realm config from Finalmask field to ProtoExtraObj; 1. sb -d 菜单新增「指定网络出口」选项，可为出站流量绑定特定网卡; 2. v2rayN 的 Hysteria2 Realm 配置从 Finalmask 字段改为 ProtoExtraObj
+>
+>2026.07.01 v1.3.15 Add v2rayN Finalmask field for hysteria2 realm subscription output; v2rayN 订阅输出增加 Hysteria2 Realm 的 Finalmask 字段
+>
+>2026.05.29 v1.3.14 Added optional custom warp route rule management, available after installation via [sb -d] without affecting the main installation flow; 增加可选的自定义 warp 路由规则管理，不影响主程序安装流程，安装后可通过 [sb -d] 按需管理
+>
+>2026.05.18 v1.3.13 Added top-level http_clients configuration; 增加顶层的 http_clients 配置
+>
+>2026.05.14 v1.3.12 1. Add Hysteria2 Realm support for machines without public inbound access, with optional WARP-assisted hole punching for strict NAT environments; 2. Realm configuration export is supported for Clash/Mihomo and sing-box clients; 3. Hysteria2 Realm can be enabled or disabled directly via sb -d; 4. Non-interactive installs support --HY2_REALM and --HY2_WARP parameters; 1. 增加 Hysteria2 Realm 支持，适用于没有公网入口的机器，并可选 WARP 辅助打洞; 2. Realm 已支持导出 Clash/Mihomo 和 sing-box 客户端配置; 3. 修改节点配置时可直接开启或关闭 Hysteria2 Realm; 4. 无交互安装支持 --HY2_REALM 与 --HY2_WARP 参数
+>
+>2026.05.06 v1.3.11 1. Generate v2rayn:// dedicated links for Tuic subscriptions; 2. Generate v2rayn:// dedicated links for AnyTLS subscriptions; 3. Generate v2rayn:// dedicated links for naive http2 and quic modes. Thanks to @DHR60; 1. 为 Tuic 订阅生成 v2rayn:// 专属链接; 2. 为 AnyTLS 订阅生成 v2rayn:// 专属链接; 3. 为 naive http2 和 quic 模式生成 v2rayn:// 专属链接，感谢 @DHR60
+>
+>2026.04.25 v1.3.10 Added native protocol, but client support is extremely limited, with Shadowrocket offering the best compatibility. For the sing-box core, you must use the -glibc or -musl version according to the requirements; refer to the official documentation for details: https://sing-box.sagernet.org/configuration/outbound/naive/; 增加 native 协议，支持该协议的客户端极少，Shadowrocket 支持最好。sing-box 内核需要按说明使用-glibc 或者 -musl 版本，详见官方说明 https://sing-box.sagernet.org/zh/configuration/outbound/naive/
+>
+>2026.04.11 v1.3.9 1. remove pre-install UFW blocking logic, fallback to iptables when inactive; 2. avoid unnecessary sing-box restart for CDN / bandwidth / port hopping changes; 3. reduce redundant single-use functions; 1. 移除安装前 UFW 强制校验，inactive 自动回退 iptables; 2. 优选地址 / 带宽 / 端口跳跃修改不再重启 sing-box; 3. 清理单次调用函数，提升结构可读性
+>
 >2026.04.10 v1.3.8 1. Automatically detect UFW and switch rule management accordingly; 2. Merge the old -p (port change) functionality into -d (config editor), simplifying usage; 3. Remove the standalone -p / -P entry points entirely; 1. 自动检测 UFW 并切换规则管理方式; 2. 将原有 -p（修改端口）功能合并到 -d（配置修改），简化使用方式; 3. 完全移除独立的 -p / -P 入口
 >
 >2026.04.09 v1.3.7 1. Add support for enabling/disabling Hysteria2 port hopping and modifying port ranges after installation (sb -d); 2. Allow customization of Hysteria2 upload/download bandwidth without reinstalling; 3. Enhance client configuration with proper Hysteria2 bandwidth (up/down) and port hopping parameters; 1. 支持安装后启用/禁用 Hysteria2 端口跳跃，并可修改端口范围 (sb -d); 2. 支持自定义 Hysteria2 上下行带宽，无需重新安装; 3. 完善客户端配置，补充 Hysteria2 上传/下载速率及端口跳跃参数
@@ -142,10 +170,13 @@
 
 * 一键部署多协议，可以单选、多选或全选 ShadowTLS v3 / XTLS Reality / Hysteria2 / Tuic V5 / ShadowSocks / Trojan / Vmess + ws / Vless + ws + tls / H2 Reality / gRPC Reality / AnyTLS / NaiveProxy, 总有一款适合你
 * 所有协议均不需要域名，可选 Cloudflare Argo Tunnel 内网穿透以支持传统方式为 websocket 的协议
-* 节点信息输出到 V2rayN / Clash Verge / 小火箭 / Nekobox / Sing-box (SFI, SFA, SFM)，订阅自动适配客户端，一个订阅 url 走天下
+* Hysteria2 支持 Realm 模式，适用于回国、没有公网入口、住宅 NAT、CGNAT 等无法开放入站端口的机器；有公网入口时不建议使用，并可选 WARP 辅助打洞提高严格 NAT 环境下的成功率
+* 节点信息输出到 V2rayN / Clash Verge / 小火箭 / Throne / Sing-box (SFI, SFA, SFM)，订阅自动适配客户端，一个订阅 url 走天下
 * 自定义端口，适合有限开放端口的 nat 小鸡
+* 安装后通过 sb -d 可修改监听端口：修改开始端口（各协议按顺序占用）或为各协议设置独立（非连续）端口，端口变更自动同步 nginx 反代并热加载
+* 服务器地址支持填写 IP 或域名，NAT VPS 公网 IP 每日变化时可直接使用 DDNS 域名，新安装与 sb -d 修改均可
 * 内置 warp 链式代理解锁 chatGPT
-* 智能判断操作系统: Ubuntu 、Debian 、CentOS 、Alpine 和 Arch Linux,请务必选择 LTS 系统
+* 智能判断操作系统: Ubuntu 、Debian 、CentOS 、Alpine 、Armbian 和 Arch Linux,请务必选择 LTS 系统
 * 支持硬件结构类型: AMD 和 ARM，支持 IPv4 和 IPv6
 * 无交互极速安排模式: 一个回车完成 11 个协议的安装
 
@@ -213,7 +244,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --VLESS_HOST_DOMAIN vless.test.com \
   --UUID_CONFIRM 20f7fca4-86e5-4ddf-9eed-24142073d197 \
   --SUBSCRIBE=true \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -234,7 +267,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --VMESS_HOST_DOMAIN vmess.test.com \
   --VLESS_HOST_DOMAIN vless.test.com \
   --UUID_CONFIRM 20f7fca4-86e5-4ddf-9eed-24142073d197 \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -255,7 +290,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --UUID_CONFIRM 20f7fca4-86e5-4ddf-9eed-24142073d197 \
   --SUBSCRIBE=true \
   --ARGO=true \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -275,7 +312,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --CDN skk.moe \
   --UUID_CONFIRM 20f7fca4-86e5-4ddf-9eed-24142073d197 \
   --ARGO=true \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -298,7 +337,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --ARGO=true \
   --ARGO_DOMAIN=sb.argo.com \
   --ARGO_AUTH='{"AccountTag":"9cc9e3e4d8f29d2a02e297f14f20513a","TunnelSecret":"6AYfKBOoNlPiTAuWg64ZwujsNuERpWLm6pPJ2qpN8PM=","TunnelID":"1ac55430-f4dc-47d5-a850-bdce824c4101"}' \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -320,7 +361,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --ARGO=true \
   --ARGO_DOMAIN=sb.argo.com \
   --ARGO_AUTH='{"AccountTag":"9cc9e3e4d8f29d2a02e297f14f20513a","TunnelSecret":"6AYfKBOoNlPiTAuWg64ZwujsNuERpWLm6pPJ2qpN8PM=","TunnelID":"1ac55430-f4dc-47d5-a850-bdce824c4101"}' \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -343,7 +386,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --ARGO=true \
   --ARGO_DOMAIN=sb.argo.com \
   --ARGO_AUTH='sudo cloudflared service install eyJhIjoiOWNjOWUzZTRkOGYyOWQyYTAyZTI5N2YxNGYyMDUxM2EiLCJ0IjoiOGNiZDA4ZjItNGM0MC00OGY1LTlmZDYtZjlmMWQ0YTcxMjUyIiwicyI6IllXWTFORGN4TW1ZdE5HTXdZUzAwT0RaakxUbGxNMkl0Wm1VMk5URTFOR0l4TkdKayJ9' \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -365,7 +410,9 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
   --ARGO=true \
   --ARGO_DOMAIN=sb.argo.com \
   --ARGO_AUTH='gKyflo59sDb5bI_fNr2OWCDnpihMUBIbJ29YsrtS' \
-  --PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_PORT_HOPPING_RANGE 50000:51000 \
+  --HY2_REALM=true \
+  --HY2_WARP=true \
   --REALITY_PRIVATE=UPO3FWlg6YDJbASYi7KIESibPec_K46edTvDPbqEYFk \
   --NODE_NAME_CONFIRM bucket
 ```
@@ -373,6 +420,7 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
 
 
 ### 参数说明
+
 | Key 大小写不敏感（Case Insensitive）| Value |
 | --------------- | ----------- |
 | --LANGUAGE | c=中文;  e=英文 |
@@ -387,8 +435,11 @@ bash <(wget -qO- https://raw.githubusercontent.com/fscarmen/sing-box/main/sing-b
 | --ARGO | 是否使用 Argo Tunnel，如果是填 true，如果使用 Origin rules，则可以忽略本 Key |
 | --ARGO_DOMAIN | 固定 Argo 域名，即是 Json 或者 Token 隧道的域名 |
 | --ARGO_AUTH | Json, Token 隧道的内容，或者是 Cloudflare API 密钥 |
-| --PORT_HOPPING_RANGE | hysteria2 跳跃端口范围，如 50000:51000 |
+| --HY2_PORT_HOPPING_RANGE | hysteria2 跳跃端口范围，如 50000:51000 |
+| --HY2_REALM | [true, false]，是否启用 Hysteria2 Realm，true 为启用。适用于没有公网入口、住宅 NAT、CGNAT 或需要回国打洞的机器，有公网入口时不建议使用，默认为 false |
+| --HY2_WARP | [true, false]，是否启用 Realm 的 WARP 辅助打洞，true 为启用。适用于 NAT 严格环境；设置为 true 时会自动启用 Realm，默认为 false |
 | --REALITY_PRIVATE | reality 密钥 |
+| --BIND_INTERFACE | 指定网络出口，绑定到特定网卡，如 eth0<br>值为 default 或不指定则不绑定 |
 | --NODE_NAME_CONFIRM | 节点名 |
 
 
@@ -546,8 +597,8 @@ services:
 | -e ARGO_AUTH | 否 | Argo 认证信息，可以是 Json， Token 或者 Cloudflare API，与 ARGO_DOMAIN 一并使用才能生效，不指定的话将使用临时隧道 |
 
 
-## 10.Nekobox 设置 shadowTLS 方法
-1. 复制脚本输出的两个 Neko links 进去
+## 10.Throne 设置 shadowTLS 方法
+1. 复制脚本输出的两个 Throne links 进去
 <img width="630" alt="image" src="https://github.com/fscarmen/sing-box/assets/62703343/db5960f3-63b1-4145-90a5-b01066dd39be">
 
 2. 设置链式代理，并启用
@@ -574,6 +625,8 @@ services:
 |   |-- 04_experimental.json                 # 缓存配置文件
 |   |-- 05_dns.json                          # DNS 规则文件
 |   |-- 06_ntp.json                          # 服务端时间同步配置文件
+|   |-- 07_http_clients.json                 # 专门给 sing-box 内部组件发 HTTP 请求配置文件
+|   |-- 08_custom_route.json                 # 用户自定义 warp-ep 出站路由规则文件，支持 domain_suffix / rule_set 分流
 |   |-- 11_xtls-reality_inbounds.json        # Reality vision 协议配置文件
 |   |-- 12_hysteria2_inbounds.json           # Hysteria2 协议配置文件
 |   |-- 13_tuic_inbounds.json                # Tuic V5 协议配置文件 # Hysteria2 协议配置文件
@@ -589,7 +642,7 @@ services:
 |-- logs
 |   `-- box.log                              # sing-box 运行日志文件
 |-- subscribe                                # sing-box server 配置文件目录
-|   |-- qr                                   # Nekoray / V2rayN / Shadowrock 订阅二维码
+|   |-- qr                                   # Throne / V2rayN / Shadowrock 订阅二维码
 |   |-- shadowrocket                         # Shadowrock 订阅文件
 |   |-- proxies                              # Clash proxy provider 订阅文件
 |   |-- clash                                # Clash 订阅文件1
@@ -598,7 +651,7 @@ services:
 |   |-- sing-box-phone                       # SFI / SFA 订阅文件1
 |   |-- sing-box2                            # SFI / SFA / SFM 订阅文件2
 |   |-- v2rayn                               # V2rayN 订阅文件
-|   `-- neko                                 # Nekoray 订阅文件
+|   `-- throne                               # Throne 订阅文件
 |-- cache.db                                 # sing-box 缓存文件
 |-- nginx.conf                               # 用于订阅服务的 nginx 配置文件
 |-- language                                 # 存放脚本语言文件，E 为英文，C 为中文
@@ -618,14 +671,14 @@ services:
 | 客户端 / 工具 | 使用的证书验证方式 | SNI 是否必须匹配 SAN | 是否依赖完整证书链 | 使用的 Hash / 指纹类型 | SNI 用途说明 |
 |---------------|---------------------|------------------------|------------------------|--------------------------|----------------------|
 | **V2RayN** | 标准 X.509 证书链验证 | **是**（必须匹配） | ✔ 是 | 不使用指纹 | 用于 TLS Hostname 验证（必须与 SAN 一致） |
-| **NekoBox** | 标准 X.509 证书链验证 | **是**（必须匹配） | ✔ 是 | 不使用指纹 | 用于 TLS Hostname 验证（必须与 SAN 一致） |
+| **Throne** | 标准 X.509 证书链验证 | **是**（必须匹配） | ✔ 是 | 不使用指纹 | 用于 TLS Hostname 验证（必须与 SAN 一致） |
 | **ShadowRocket** | 对证书 **DER 全内容** 做 SHA-256 | ✖ 不需要匹配 | ✖ 不依赖证书链 | **SHA-256(DER)** | 仅用于伪装，可为空或任意域名 |
 | **Clash Verge / Meta** | 对证书 **DER 全内容** 做 SHA-256 | ✖ 不需要匹配 | ✖ 不依赖证书链 | **SHA-256(DER)** | 仅用于伪装，可为空或任意域名 |
 | **Sing-box** | 仅验证 SPKI 公钥（SPKI pin） | ✖ 不需要匹配 | ✖ 不依赖证书链 | **SHA-256(SPKI Base64)** | 仅用于伪装，可为空或任意域名 |
 
 
 ### 结论：
- - **V2RayN、NekoBox 必须要 SAN = SNI**，否则“x509: cannot validate certificate because it doesn't contain IP SAN”。
+ - **V2RayN、Throne 必须要 SAN = SNI**，否则“x509: cannot validate certificate because it doesn't contain IP SAN”。
  - **ShadowRocket、Clash、Sing-box、HY2、TUIC 完全不需要 SAN**，因为用的是指纹机制。
 
 ---
@@ -646,7 +699,7 @@ services:
 | EC 曲线参数 | ✔ | ✔ | ✔ |
 | Signature Algorithm | ✔ | ✔ | ✖ |
 | Signature Value | ✔ | ✔ | ✖ |
-| 用途场景 | V2RayN / NekoBox | ShadowRocket / Clash | Sing-box / Hysteria2 / TUIC |
+| 用途场景 | V2RayN / Throne | ShadowRocket / Clash | Sing-box / Hysteria2 / TUIC |
 
 ---
 
@@ -656,7 +709,7 @@ services:
 - 完整验证 CA → Leaf 证书
 - **必须要求：SNI = SAN 中的一个 DNS 名称**
 - 不允许 SAN 不匹配或缺失
-- 用于：**V2RayN / NekoBox**
+- 用于：**V2RayN / Throne**
 
 #### **2. SHA-256(DER) 指纹**
 - 对证书 **整体 DER（二进制）内容** 计算 SHA-256
